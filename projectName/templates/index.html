@@ -121,7 +121,7 @@
              {% endcomment %}
         </div>
         <button  class='button' id="startBtn">Voice Command Mod</button>
-        <p id="status"></p>
+        <p id="status">here all cmd goes</p>
 
         <div id="voice-feedback" style="display: none;">
             <h3>What do you want to do?</h3>
@@ -161,64 +161,74 @@
     <script defer>
 // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Voice recognition
-const captureBtn = document.getElementById('capture-btn');
-const uploadBtn = document.getElementById('uploadBtn');
-const startBtn = document.getElementById('startBtn');
-const status = document.getElementById('status');
-
+// const captureBtn = document.getElementById('capture-btn');
+// const uploadBtn = document.getElementById('uploadBtn');
+// const startBtn = document.getElementById('startBtn');
+// const status = document.getElementById('status');
+function speak(message) {
+    const speechSynthesis = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.lang = 'en-US'; // Set the language
+    utterance.rate = 1; // Set the speech rate (1 is normal)
+    utterance.pitch = 1; // Set the pitch (1 is default)
+    speechSynthesis.speak(utterance);
+}
 let recognition;
 let isListening = false;
+let startBtn = document.getElementById('startBtn');
+let captureBtn = document.getElementById('capture-btn');
+let uploadBtn = document.getElementById('uploadBtn');
+let status = document.getElementById('status');
 
 if ('webkitSpeechRecognition' in window) {
-    const recognition = new webkitSpeechRecognition();
+    recognition = new webkitSpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = false;
 
     recognition.onresult = function(event) {
         const last = event.results.length - 1;
         const command = event.results[last][0].transcript.trim().toLowerCase();
-        console.log('Recognized command:', command); // Debugging
+        console.log('Recognized command:', command);
 
         if (command.includes('one')) {
             isListening = true;
-            const status = document.getElementById('status'); // Ensure it's not null
-            if (status) {
-                status.textContent = 'Listening for commands...';
-                console.log('on')
+            speak('Hey, I am listening. Say me what do you want: Capture or Upload?');
+        } else if (isListening) {
+            if (command.includes('capture')) {
+                captureBtn.click();
+                speak('We successfully captured your command. Now, what do you want to do? Object Detection, Currency Detection, or Danger Alert?');
+            } else if (command.includes('upload')) {
+                uploadBtn.click();
+                speak('We successfully uploaded your command. Now, what do you want to do? Object Detection, Currency Detection, or Danger Alert?');
+            } else if (command.includes('object detection')) {
+                startMode('object-detection');
+            } else if (command.includes('currency detection')) {
+                startMode('currency-detection');
+            } else if (command.includes('danger alert')) {
+                startMode('danger-alert');
             }
-            else{
-                console.log('not lilsting')
-            }
-            console.log('Listening...');
         }
     };
 
     recognition.onerror = function(event) {
-        console.error('Speech recognition error:', event.error); // Debugging
+        console.error('Speech recognition error:', event.error);
     };
 
-    recognition.onstart = function() {
-        console.log('Speech recognition started');
+    recognition.onend = function() {
+        console.log('Speech recognition ended. Restarting...');
+        recognition.start();
     };
 
-    recognition.start();
+    startBtn.addEventListener('click', () => {
+        status.textContent = 'Voice Command Mode Activated';
+        speak('Voice command mode activated. Say One to start listening.');
+        recognition.start();
+    });
 } else {
     console.error('Speech recognition is not supported in this browser.');
+    startBtn.style.display = 'none';
 }
 
-
-captureBtn.addEventListener('click', () => {
-    status.textContent = 'Two';
-});
-
-uploadBtn.addEventListener('click', () => {
-    status.textContent = 'Upload button clicked';
-});
-
-startBtn.addEventListener('click', () => {
-    status.textContent = 'Start button clicked';
-    
-});
 ////////////////////////
 
 
