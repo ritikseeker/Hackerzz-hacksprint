@@ -1,6 +1,5 @@
 import cv2
 import face_recognition
-
 import numpy as np
 from django.shortcuts import render
 from django.http import JsonResponse
@@ -27,6 +26,7 @@ def recognize_face(request):
         
         face_locations = face_recognition.face_locations(img)
         face_encodings = face_recognition.face_encodings(img, face_locations)
+        print(img)
         
         if len(face_encodings) == 0:
             return JsonResponse({'message': 'No face detected'})

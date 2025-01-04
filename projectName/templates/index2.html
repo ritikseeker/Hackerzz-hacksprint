@@ -137,8 +137,8 @@
                 <button onclick="startMode('object-detection')">Object Detection</button>
                 <button onclick="startMode('currency-detection')">Currency Detection</button>
                 <button onclick="startMode('danger-alert')">Danger Alert</button>
-                <button onclick="startMode('face')" class="button" id='face-recognition-btn'>Face Recognition</button>
-                <button onclick="startMode('Text')" class="button" id='text-finder-btn'>Text Finder</button>
+                <button class="button" id='face-recognition-btn'>Face Recognition</button>
+                <button class="button" id='text-finder-btn'>Text Finder</button>
 
             </div>
             <!-- <div class="image-box " id ='captured-image'>
@@ -215,29 +215,23 @@
             console.log('Recognized command:', command);
 
 
-            if (command.includes('start')) {
+            if (command.includes('one')) {
                 isListening = true;
                 speak('Hey, I am listening. Say me what do you want: Capture or Upload?');
             } else if (isListening) {
                 if (command.includes('capture')) {
                     captureBtn.click();
-                    speak('We successfully captured your command. Now, what do you want to do? Object Detection, Currency Detection,   Danger Alert,Face Recognition or Text Detection');
+                    speak('We successfully captured your command. Now, what do you want to do? Object Detection, Currency Detection, or Danger Alert?');
                 } else if (command.includes('upload')) {
                     uploadBtn.click();
-                    speak('We successfully uploaded your command. Now, what do you want to do? Object Detection, Currency Detection,   Danger Alert,Face Recognition or Text Detection');
+                    speak('We successfully uploaded your command. Now, what do you want to do? Object Detection, Currency Detection, or Danger Alert?');
                 } else if (command.includes('object detection')) {
                     startMode('object-detection');
                 } else if (command.includes('currency detection')) {
                     startMode('currency-detection');
                 } else if (command.includes('danger alert')) {
                     startMode('danger-alert');
-                } else if (command.includes('text')) {
-                    startMode('Text');
-                } else if (command.includes('face')) {
-                    faceRecognitionBtn.click();
                 }
-            
-            
             }
         };
 
@@ -252,7 +246,7 @@
 
         startBtn.addEventListener('click', () => {
             status.textContent = 'Voice Command Mode Activated';
-            speak('Voice command mode activated. Say start to start listening.');
+            speak('Voice command mode activated. Say One to start listening.');
             recognition.start();
         });
     } else {
@@ -326,7 +320,6 @@
         .then(data => {
             if (data.name) {
                 resultDiv.textContent = `Recognized: ${data.name}`;
-                speak(`The recognized face is: ${data.name}`);
                 addPersonForm.style.display = 'none';
             } else {
                 resultDiv.textContent = data.message;
