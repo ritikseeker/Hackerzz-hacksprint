@@ -1,0 +1,401 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Nav Eye</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f0f0f0;
+                display: flex;
+                flex-direction: column;
+                min-height: 100vh;
+            }
+            .container {
+                background-color: white;
+                border-radius: 10px;
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+                padding: 2rem;
+                width: 90%;
+                max-width: 600px;
+                margin: 2rem auto;
+            }
+            h1 {
+                color: #333;
+                text-align: center;
+                margin-bottom: 2rem;
+            }
+            .button-container {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 1rem;
+            }
+            .button {
+                background-color: #4CAF50;
+                border: none;
+                color: white;
+                padding: 10px 20px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                margin: 4px 2px;
+                cursor: pointer;
+                border-radius: 5px;
+                transition: background-color 0.3s;
+            }
+            .button:hover {
+                background-color: #45a049;
+            }
+            .image-box {
+                width: 100%;
+                height: 300px;
+                border: 2px dashed #ccc;
+                border-radius: 5px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-bottom: 1rem;
+            }
+            .image-box p {
+                color: #999;
+            }
+            #start-button {
+                display: block;
+                width: 100%;
+                padding: 15px;
+                font-size: 18px;
+                background-color: #008CBA;
+            }
+            #start-button:hover {
+                background-color: #007B9A;
+            }
+            footer {
+                background-color: #333;
+                color: white;
+                padding: 2rem 0;
+                margin-top: auto;
+            }
+            .faq-container {
+                width: 90%;
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            .faq-item {
+                margin-bottom: 1rem;
+            }
+            .faq-question {
+                background-color: #444;
+                color: white;
+                padding: 1rem;
+                cursor: pointer;
+                border-radius: 5px;
+                transition: background-color 0.3s;
+            }
+            .faq-question:hover {
+                background-color: #555;
+            }
+            .faq-answer {
+                background-color: #f9f9f9;
+                color: #333;
+                padding: 1rem;
+                display: none;
+                border-radius: 0 0 5px 5px;
+            }
+            #result {
+                margin-top: 20px;
+                font-size: 18px;
+            }
+            #add-person-form {
+                display: none;
+                margin-top: 20px;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Nav Eye</h1>
+            <div class="button-container">
+                <div id="camera-view" class="image-box">
+                    <video id="webcam" autoplay playsinline width="320" height="240" style='border-radius:10px;'></video>
+                    <br>
+                    <button class="button" id="capture-btn">Capture</button>
+                    <button class="button" id='uploadBtn'>Upload</button>
+                </div>
+                {% comment %} <button class="button" id = 'capture-btn'>Capture</button>
+                {% endcomment %}
+            </div>
+            <button  class='button' id="startBtn">Voice Command Mod</button>
+            <p id="status">here all cmd goes</p>
+
+            <div id="voice-feedback" style="display: none;">
+                <h3>What do you want to do?</h3>
+                <button onclick="startMode('object-detection')">Object Detection</button>
+                <button onclick="startMode('currency-detection')">Currency Detection</button>
+                <button onclick="startMode('danger-alert')">Danger Alert</button>
+                <button class="button" id='face-recognition-btn'>Face Recognition</button>
+                <button class="button" id='text-finder-btn'>Text Finder</button>
+
+            </div>
+            <!-- <div class="image-box " id ='captured-image'>
+                <p><img id="captured-image"class="image-box " alt="Captured image">Image will appear here</p>
+            </div>
+            <button id="start-button" class="button">Start</button> -->
+            <p><img id="captured-image"class="image-box " alt="Captured image"><div id="result">Result will here</div></p>
+        </div>
+
+        <div id="add-person-form">
+            <h2>Add New Person</h2>
+            <input type="text" id="person-name" placeholder="Enter name">
+            <button id="add-person">Add Person</button>
+        </div>
+
+
+        <footer>
+            <div class="faq-container">
+                <h2>FAQ</h2>
+                <div class="faq-item">
+                    <div class="faq-question">What is Nav Eye's main feature?</div>
+                    <div class="faq-answer">Nav Eye's main feature is advanced image recognition technology that helps users navigate through complex visual environments.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">How does the capture function work?</div>
+                    <div class="faq-answer">The capture function allows users to take a photo directly from their device's camera, which is then processed by our AI for navigation assistance.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Can I use Nav Eye offline?</div>
+                    <div class="faq-answer">Yes, Nav Eye has an offline mode that allows basic functionality without an internet connection, though some advanced features may be limited.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">Is my data secure with Nav Eye?</div>
+                    <div class="faq-answer">Absolutely. We use state-of-the-art encryption to protect all user data and images. Your privacy and security are our top priorities.</div>
+                </div>
+            </div>
+        </footer>
+
+        <script defer>
+    // /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Voice recognition
+    // const captureBtn = document.getElementById('capture-btn');
+    // const uploadBtn = document.getElementById('uploadBtn');
+    // const startBtn = document.getElementById('startBtn');
+    // const status = document.getElementById('status');
+    function speak(message) {
+        const speechSynthesis = window.speechSynthesis;
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = 'en-US'; // Set the language
+        utterance.rate = 1; // Set the speech rate (1 is normal)
+        utterance.pitch = 1; // Set the pitch (1 is default)
+        speechSynthesis.speak(utterance);
+    }
+    let recognition;
+    let isListening = false;
+    let startBtn = document.getElementById('startBtn');
+    let captureBtn = document.getElementById('capture-btn');
+    let uploadBtn = document.getElementById('uploadBtn');
+    let status = document.getElementById('status');
+    const resultDiv = document.getElementById('result');
+    const addPersonForm = document.getElementById('add-person-form');
+    const personNameInput = document.getElementById('person-name');
+    const addPersonButton = document.getElementById('add-person');
+    const feedbackDiv = document.getElementById('voice-feedback');
+
+    if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+
+        recognition.onresult = function(event) {
+            const last = event.results.length - 1;
+            const command = event.results[last][0].transcript.trim().toLowerCase();
+            console.log('Recognized command:', command);
+
+
+            if (command.includes('one')) {
+                isListening = true;
+                speak('Hey, I am listening. Say me what do you want: Capture or Upload?');
+            } else if (isListening) {
+                if (command.includes('capture')) {
+                    captureBtn.click();
+                    speak('We successfully captured your command. Now, what do you want to do? Object Detection, Currency Detection, or Danger Alert?');
+                } else if (command.includes('upload')) {
+                    uploadBtn.click();
+                    speak('We successfully uploaded your command. Now, what do you want to do? Object Detection, Currency Detection, or Danger Alert?');
+                } else if (command.includes('object detection')) {
+                    startMode('object-detection');
+                } else if (command.includes('currency detection')) {
+                    startMode('currency-detection');
+                } else if (command.includes('danger alert')) {
+                    startMode('danger-alert');
+                }
+            }
+        };
+
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error:', event.error);
+        };
+
+        recognition.onend = function() {
+            console.log('Speech recognition ended. Restarting...');
+            recognition.start();
+        };
+
+        startBtn.addEventListener('click', () => {
+            status.textContent = 'Voice Command Mode Activated';
+            speak('Voice command mode activated. Say One to start listening.');
+            recognition.start();
+        });
+    } else {
+        console.error('Speech recognition is not supported in this browser.');
+        startBtn.style.display = 'none';
+    }
+
+    ////////////////////////
+
+
+    const video = document.getElementById('webcam');
+    const capturedImage = document.getElementById('captured-image');
+    const faceRecognitionBtn = document.getElementById('face-recognition-btn');
+    const textFinderBtn = document.getElementById('text-finder-btn');
+
+    // Initialize webcam
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            video.srcObject = stream;
+        })
+        .catch(err => console.error('Error accessing webcam: ', err));
+
+    const canvas = document.createElement('canvas');
+
+    // Capture Image
+    captureBtn.addEventListener('click', () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Convert the captured frame into a base64 image data URL
+        const imageData = canvas.toDataURL('image/jpeg');
+
+        // Display the captured image in the UI
+        capturedImage.src = imageData;
+        capturedImage.style.display = 'block';
+
+                // Simulating image processing (replace with actual API call)
+                console.log('Image captured. Simulating processing...');
+                setTimeout(() => {
+                    console.log('Image processed successfully');
+                    feedbackDiv.style.display = 'block';
+                }, 1000);
+
+        // Send the image data to the server
+    
+    });
+
+    // Face Recognition
+    faceRecognitionBtn.addEventListener('click', () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Convert the captured frame into a base64 image data URL
+        const imageData = canvas.toDataURL('image/jpeg');
+
+
+        fetch('/face/recognize/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ image: imageData }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.name) {
+                resultDiv.textContent = `Recognized: ${data.name}`;
+                addPersonForm.style.display = 'none';
+            } else {
+                resultDiv.textContent = data.message;
+                addPersonForm.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+
+
+      // Add new person
+      addPersonButton.addEventListener('click', () => {
+        const name = personNameInput.value;
+        if (!name) {
+            alert('Please enter a name');
+            return;
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        const imageData = canvas.toDataURL('image/jpeg');
+
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('image', imageData);
+
+        fetch('/face/add_person/', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            addPersonForm.style.display = 'none';
+            personNameInput.value = '';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+    // Text Finder
+    textFinderBtn.addEventListener('click', () => {
+        const imageData = canvas.toDataURL('image/jpeg');
+        fetch('/recognize/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: imageData, action: 'text_finder' })
+        })
+        .then(response => response.json())
+        .then(data => alert(data.message))
+        .catch(error => console.error('Error:', error));
+    });
+
+
+
+
+
+
+
+
+
+
+            document.querySelectorAll('.faq-question').forEach(question => {
+                question.addEventListener('click', () => {
+                    const answer = question.nextElementSibling;
+                    if (answer.style.display === 'block') {
+                        answer.style.display = 'none';
+                    } else {
+                        answer.style.display = 'block';
+                    }
+                });
+            });
+            
+        </script>
+    </body>
+    </html>
