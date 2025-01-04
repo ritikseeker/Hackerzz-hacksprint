@@ -114,13 +114,15 @@
             <div id="camera-view" class="image-box">
                 <video id="webcam" autoplay playsinline width="320" height="240" style='border-radius:10px;'></video>
                 <br>
-                <button class="button" id = 'capture-btn'>Capture</button>
-                <button class="button">Upload</button>
+                <button class="button" id="capture-btn">Capture</button>
+                <button class="button" id='uploadBtn'>Upload</button>
             </div>
-            {% comment %} <button class="button" id = 'capture-btn'>Capture</button> {% endcomment %}
-            
+            {% comment %} <button class="button" id = 'capture-btn'>Capture</button>
+             {% endcomment %}
         </div>
-       
+        <button  class='button' id="startBtn">Voice Command Mod</button>
+        <p id="status">here all cmd goes</p>
+
         <div id="voice-feedback" style="display: none;">
             <h3>What do you want to do?</h3>
             <button onclick="startMode('object-detection')">Object Detection</button>
@@ -156,9 +158,93 @@
         </div>
     </footer>
 
-    <script>
+    <script defer>
+// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Voice recognition
+// const captureBtn = document.getElementById('capture-btn');
+// const uploadBtn = document.getElementById('uploadBtn');
+// const startBtn = document.getElementById('startBtn');
+// const status = document.getElementById('status');
+function speak(message) {
+    const speechSynthesis = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.lang = 'en-US'; // Set the language
+    utterance.rate = 1; // Set the speech rate (1 is normal)
+    utterance.pitch = 1; // Set the pitch (1 is default)
+    speechSynthesis.speak(utterance);
+}
+let recognition;
+let isListening = false;
+let startBtn = document.getElementById('startBtn');
+let captureBtn = document.getElementById('capture-btn');
+let uploadBtn = document.getElementById('uploadBtn');
+let status = document.getElementById('status');
+
+if ('webkitSpeechRecognition' in window) {
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    recognition.onresult = function(event) {
+        const last = event.results.length - 1;
+        const command = event.results[last][0].transcript.trim().toLowerCase();
+        console.log('Recognized command:', command);
+
+        if (command.includes('one')) {
+            isListening = true;
+            speak('Hey, I am listening. Say me what do you want: Capture or Upload?');
+        } else if (isListening) {
+            if (command.includes('capture')) {
+                captureBtn.click();
+                speak('We successfully captured your command. Now, what do you want to do? Object Detection, Currency Detection, or Danger Alert?');
+            } else if (command.includes('upload')) {
+                uploadBtn.click();
+                speak('We successfully uploaded your command. Now, what do you want to do? Object Detection, Currency Detection, or Danger Alert?');
+            } else if (command.includes('object detection')) {
+                startMode('object-detection');
+            } else if (command.includes('currency detection')) {
+                startMode('currency-detection');
+            } else if (command.includes('danger alert')) {
+                startMode('danger-alert');
+            }
+        }
+    };
+
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+    };
+
+    recognition.onend = function() {
+        console.log('Speech recognition ended. Restarting...');
+        recognition.start();
+    };
+
+    startBtn.addEventListener('click', () => {
+        status.textContent = 'Voice Command Mode Activated';
+        speak('Voice command mode activated. Say One to start listening.');
+        recognition.start();
+    });
+} else {
+    console.error('Speech recognition is not supported in this browser.');
+    startBtn.style.display = 'none';
+}
+
+////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
         const video = document.getElementById('webcam');
-        const captureBtn = document.getElementById('capture-btn');
         const capturedImage = document.getElementById('captured-image');
         const feedbackDiv = document.getElementById('voice-feedback');
         
