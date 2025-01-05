@@ -1,3 +1,4 @@
-from django.test import TestCase
+from face.models import Person
 
-# Create your tests here.
+# Delete a specific record
+Person.objects.filter(name='Shubham').delete()

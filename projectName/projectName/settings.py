@@ -10,8 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 # Add the following at the end of the file
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 04dd203642660d3a027ca02d7d892977e6b89616
 from environs import Env
 from pathlib import Path
 
@@ -137,6 +140,7 @@ STATICFILES_DIRS = [
 STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+<<<<<<< HEAD
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -150,3 +154,15 @@ env.read_env()
 API_KEY  = env('API_KEY', None)
 if API_KEY  is None:
     raise ValueError("Please enter API Key")
+=======
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+import os
+
+import os
+
+# API Key configuration
+API_KEY = os.getenv('API_KEY')  # Fetch API key from environment variables
+if API_KEY is None:
+    raise ValueError("API Key is not set. Please configure the API Key.")
+>>>>>>> 04dd203642660d3a027ca02d7d892977e6b89616

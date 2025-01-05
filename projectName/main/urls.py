@@ -6,10 +6,15 @@ from django.conf import settings
 urlpatterns = [
     path('', views.home, name='home'),  # Example view
     path('face/', include('face.urls')),  # This ensures all URLs starting with 'face/' are routed to face app
+<<<<<<< HEAD
     path('', include('object.urls')),  # This ensures all URLs starting with 'face/' are routed to face app
 
     
 
+=======
+    
+    
+>>>>>>> 04dd203642660d3a027ca02d7d892977e6b89616
 ]
 
 
