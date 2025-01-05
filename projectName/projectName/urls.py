@@ -22,6 +22,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('main.urls')),  # Include app UR
     path('face/', include('main.urls')),  # Include app UR
+     path('object/', include('object.urls')),  # Include app UR
 
     
  

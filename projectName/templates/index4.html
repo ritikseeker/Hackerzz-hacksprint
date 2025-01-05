@@ -134,7 +134,7 @@
 
             <div id="voice-feedback" style="display: none;">
                 <h3>What do you want to do?</h3>
-                <button id= 'objectDetectionBtn' >Object Detection</button>
+                <button onclick="startMode('object-detection')">Object Detection</button>
                 <button onclick="startMode('currency-detection')">Currency Detection</button>
                 <button onclick="startMode('danger-alert')">Danger Alert</button>
                 <button onclick="startMode('face')" class="button" id='face-recognition-btn'>Face Recognition</button>
@@ -154,8 +154,6 @@
             <button id="add-person">Add Person</button>
         </div>
 
-    
-        
 
         <footer>
             <div class="faq-container">
@@ -205,7 +203,6 @@
     const personNameInput = document.getElementById('person-name');
     const addPersonButton = document.getElementById('add-person');
     const feedbackDiv = document.getElementById('voice-feedback');
-    const objectDetectionBtn = document.getElementById('objectDetectionBtn');
 
     if ('webkitSpeechRecognition' in window) {
         recognition = new webkitSpeechRecognition();
@@ -238,7 +235,7 @@
                     startMode('Text');
                 } else if (command.includes('face')) {
                     faceRecognitionBtn.click();
-                } 
+                }
             
             
             }
@@ -373,16 +370,23 @@
             console.error('Error:', error);
         });
     });
+    // Text Finder
+    textFinderBtn.addEventListener('click', () => {
+        const imageData = canvas.toDataURL('image/jpeg');
+        fetch('/recognize/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: imageData, action: 'text_finder' })
+        })
+        .then(response => response.json())
+        .then(data => alert(data.message))
+        .catch(error => console.error('Error:', error));
+    });
 
 
 
 
 
-        // Capture image
-        objectDetectionBtn.addEventListener('click', () => {
-            window.location.href = "http://127.0.0.1:8000/process-image";
-        });
-    
 
 
 
