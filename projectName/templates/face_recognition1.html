@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        #video, #canvas {
+            width: 640px;
+            height: 480px;
+            background-color: #ddd;
+            margin-top: 20px;
+        }
+        #canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Face Recognition App</h1>
+    <button id="captureButton">Activate Camera</button>
+    <button id="startVoiceCommand">Start Voice Command</button>
+    <video id="video" autoplay></video>
+    <canvas id="canvas"></canvas>
+    <img id="capturedImage" src="" alt="Captured Image" />
+    <script >
+let recognition;
+let synth;
+let stream;
+let video;
+let canvas;
+let capturedImageElement = document.getElementById('capturedImage');
+document.addEventListener('DOMContentLoaded', () => {
+    synth = window.speechSynthesis;
+    setupSpeechRecognition();
+
+    video = document.getElementById('video');
+    canvas = document.getElementById('canvas');
+
+    document.getElementById('captureButton').addEventListener('click', captureImage);
+    document.getElementById('startVoiceCommand').addEventListener('click', startVoiceCommand);
+});
+
+function setupSpeechRecognition() {
+    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.continuous = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event) => {
+        const command = event.results[0][0].transcript.toLowerCase();
+        console.log('Recognized Command:', command);
+        processCommand(command);
+    };
+}
+
+async function captureImage() {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        video.play();
+        speak('Camera activated.');
+    } catch (err) {
+        console.error('Error accessing camera:', err);
+        speak('Error accessing camera. Please make sure you have given permission to use the camera.');
+    }
+}
+
+function startVoiceCommand() {
+    speak('Listening for command');
+    recognition.start();
+}
+
+function processCommand(command) {
+    if (command.includes('face')) {
+        detectFace();
+        console.log(command)
+    } else {
+        speak("I didn't understand that command. Please try again.");
+    }
+}
+
+function detectFace() {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    
+    const imageData = canvas.toDataURL('image/jpeg');
+    capturedImageElement.src = imageData;
+    fetch('/process_image/', {
+        method: 'POST',
+        body: JSON.stringify({ image: imageData }),
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.face_detected) {
+            if (data.person_id) {
+                getPersonDetails(data.person_id);
+            } else {
+                speak('Face detected. No matching person found in the database. Would you like to add this person?');
+                listenForAddPerson();
+            }
+        } else {
+            speak('No face detected in the image.');
+        }
+    });
+}
+
+function getPersonDetails(personId) {
+    fetch('/get_person', {
+        method: 'POST',
+        body: JSON.stringify({ person_id: personId }),
+        headers: { 'Content-Type': 'application/json' }
+    })
+        .then(response => response.json())
+        .then(data => {
+            speak(`Person identified as ${data.name}, age ${data.age}`);
+        });
+}
+
+function listenForAddPerson() {
+    recognition.onresult = (event) => {
+        const response = event.results[0][0].transcript;
+        speak(`You said: ${response}. Do you want to save, modify, or skip?`);
+        listenForSaveModifySkip(response);
+    };
+    recognition.start();
+}
+
+function listenForSaveModifySkip(name) {
+    recognition.onresult = (event) => {
+        const choice = event.results[0][0].transcript.toLowerCase();
+        if (choice.includes('save')) {
+            savePerson(name);
+        } else if (choice.includes('modify')) {
+            speak('Please say the name again.');
+            listenForAddPerson();
+        } else if (choice.includes('skip')) {
+            speak('Skipped adding the person.');
+        } else {
+            speak('I did not understand. Please say save, modify, or skip.');
+            listenForSaveModifySkip(name);
+        }
+    };
+    recognition.start();
+}
+
+function savePerson(name) {
+    fetch('/add_person', {
+        method: 'POST',
+        body: JSON.stringify({ name: name }),
+        headers: { 'Content-Type': 'application/json' }
+    })
+        .then(response => response.json())
+        .then(data => {
+            speak(data.message);
+        });
+}
+
+function speak(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    synth.speak(utterance);
+}
+
+
+    </script>
+</body>
+</html>
+
