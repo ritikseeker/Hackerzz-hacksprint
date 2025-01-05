@@ -231,8 +231,8 @@
                     startMode('currency-detection');
                 } else if (command.includes('danger alert')) {
                     startMode('danger-alert');
-                } else if (command.includes('text')) {
-                    startMode('Text');
+                } else if (command.includes('add')) {
+                    addPersonButton.click()
                 } else if (command.includes('face')) {
                     faceRecognitionBtn.click();
                 }
@@ -328,48 +328,102 @@
                 resultDiv.textContent = `Recognized: ${data.name}`;
                 speak(`The recognized face is: ${data.name}`);
                 addPersonForm.style.display = 'none';
-            } else {
+            }else if (data.message && data.message.toLowerCase().includes('no face')) {
+                // No face detected
+                resultDiv.textContent = "No face found.";
+                speak("No face was detected. Please try again.");
+                addPersonForm.style.display = 'none';}
+             else {
                 resultDiv.textContent = data.message;
+                
                 addPersonForm.style.display = 'block';
             }
         })
         .catch(error => {
             console.error('Error:', error);
-        });
+        }); 
     });
 
 
       // Add new person
       addPersonButton.addEventListener('click', () => {
-        const name = personNameInput.value;
+        let name = personNameInput.value;
+    
+        // If no name provided, use voice recognition to get the name
         if (!name) {
-            alert('Please enter a name');
-            return;
+            speak('Please say the name of the person.');
+    
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.start();
+    
+            recognition.onresult = (event) => {
+                name = event.results[0][0].transcript;
+                speak(`You said: ${name}. Do you want to save this name or modify it? Say "Save" to proceed or "Modify" to change.`);
+    
+                const decisionRecognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                decisionRecognition.lang = 'en-US';
+                decisionRecognition.start();
+    
+                decisionRecognition.onresult = (decisionEvent) => {
+                    const decision = decisionEvent.results[0][0].transcript.toLowerCase();
+    
+                    if (decision.includes('save')) {
+                        savePersonData(name);
+                    } else if (decision.includes('modify')) {
+                        speak('Please say the name again.');
+                        recognition.start();
+                    } else {
+                        speak('Command not recognized. Please try again.');
+                    }
+                };
+    
+                decisionRecognition.onerror = (error) => {
+                    console.error('Decision recognition error:', error);
+                    speak('An error occurred while recognizing your command. Please try again.');
+                };
+            };
+    
+            recognition.onerror = (error) => {
+                console.error('Name recognition error:', error);
+                speak('An error occurred while recognizing the name. Please try again.');
+            };
+    
+            return; // Stop further execution until the name is provided
         }
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        const imageData = canvas.toDataURL('image/jpeg');
-
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('image', imageData);
-
-        fetch('/face/add_person/', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert(data.message);
-            addPersonForm.style.display = 'none';
-            personNameInput.value = '';
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+    
+        // Save person data function
+        function savePersonData(name) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const imageData = canvas.toDataURL('image/jpeg');
+    
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('image', imageData);
+    
+            fetch('/add_person/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                speak(data.message);
+                addPersonForm.style.display = 'none';
+                personNameInput.value = '';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                speak('An error occurred while saving the person data. Please try again.');
+            });
+        }
+    
+        // If the name was provided directly, save it
+        savePersonData(name);
     });
+    
     // Text Finder
     textFinderBtn.addEventListener('click', () => {
         const imageData = canvas.toDataURL('image/jpeg');
