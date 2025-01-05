@@ -1,0 +1,143 @@
+<!-- image_processor/templates/image_processor/process_image.html -->
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Processing</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+        h1 { color: #333; }
+        #video, #capturedImage { width: 100%; max-width: 640px; }
+        button { padding: 10px; margin: 10px 0; cursor: pointer; }
+        #feedbackDiv { margin-top: 20px; }
+    </style>
+</head>
+<body>
+   
+    
+    <video id="video" autoplay></video>
+    <br>
+    <button id="captureBtn">Capture</button>
+    <button onclick="startMode('object-detection')">Object Detection</button>
+    <br>
+    <img id="capturedImage" style="display: none;">
+    
+    <form id="uploadForm" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="file" id="fileInput" style="display: none;">
+        <input type="text" name='query' id="textInput" placeholder="Enter text or use voice input">
+        <button type="button" id="voiceInputBtn">Voice Input</button>
+        <button type="submit">Submit</button>
+    </form>
+    
+    <h2>Results:</h2>
+    {% if image_with_boxes %}
+        <img src="{{ image_with_boxes }}" alt="Processed Image">
+    {% else %}
+        <p>No image available.</p>
+    {% endif %}
+    
+    {% if extracted_text %}
+        <h3>Extracted Text:</h3>
+        <p>{{ extracted_text }}</p>
+    {% else %}
+        <p>No extracted text available.</p>
+    {% endif %}
+    
+    {% if scene_analysis %}
+        <h3>Scene Analysis:</h3>
+        <p>{{ scene_analysis }}</p>
+    {% else %}
+        <p>No scene analysis available.</p>
+    {% endif %}
+    
+
+    <script>
+        const video = document.getElementById('video');
+        const captureBtn = document.getElementById('captureBtn');
+        const capturedImage = document.getElementById('capturedImage');
+        const fileInput = document.getElementById('fileInput');
+        const textInput = document.getElementById('textInput');
+        const voiceInputBtn = document.getElementById('voiceInputBtn');
+        const uploadForm = document.getElementById('uploadForm');
+        const feedbackDiv = document.getElementById('feedbackDiv');
+
+        // Access the camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Error accessing the camera:", err);
+            });
+
+        // Capture image
+        captureBtn.addEventListener('click', () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert the captured frame into a base64 image data URL
+            const imageData = canvas.toDataURL('image/jpeg');
+            // Display the captured image in the UI
+            capturedImage.src = imageData;
+            capturedImage.style.display = 'block';
+
+            // Convert base64 to blob and set it to file input
+            fetch(imageData)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], "captured_image.jpg", { type: "image/jpeg" });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    fileInput.files = dataTransfer.files;
+                });
+        });
+
+        // Voice input
+        voiceInputBtn.addEventListener('click', () => {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.start();
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                textInput.value = transcript;
+            };
+        });
+
+        // Form submission
+        uploadForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(uploadForm);
+            
+            fetch('', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                document.body.innerHTML = html;
+                feedbackDiv.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+
+        function startMode(mode) {
+            console.log(`Starting ${mode} mode`);
+            // Add any specific logic for different modes here
+        }
+    </script>
+</body>
+</html>

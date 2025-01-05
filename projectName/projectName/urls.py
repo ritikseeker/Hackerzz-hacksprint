@@ -22,7 +22,14 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('main.urls')),  # Include app UR
     path('face/', include('main.urls')),  # Include app UR
+<<<<<<< HEAD
+     path('object/', include('object.urls')),  # Include app UR
+=======
+    path('object/', include('object.urls')),  # Include app UR
+>>>>>>> 04dd203642660d3a027ca02d7d892977e6b89616
 
-    
  
 ]
+
+
+
